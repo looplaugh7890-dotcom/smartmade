@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/store.php';
 
 $stmt = $pdo->prepare("
     SELECT p.*, c.name AS category_name, c.slug AS category_slug
@@ -21,6 +22,19 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute();
 $testimonials = $stmt->fetchAll();
+
+$featuredProducts = fetch_products(['featured' => true, 'per_page' => 4, 'sort' => 'popular'])['rows'];
+
+$stmt = $pdo->prepare("
+    SELECT r.*, p.name AS product_name, p.slug AS product_slug
+    FROM reviews r
+    LEFT JOIN products p ON r.product_id = p.id
+    WHERE r.status = 'approved'
+    ORDER BY r.is_featured DESC, r.created_at DESC
+    LIMIT 3
+");
+$stmt->execute();
+$publicReviews = $stmt->fetchAll();
 
 $stmt = $pdo->prepare("
     SELECT * FROM blog_posts
@@ -155,6 +169,28 @@ include __DIR__ . '/includes/header.php';
     </div>
 </section>
 
+<?php if (!empty($featuredProducts)): ?>
+<section class="section shop-section" aria-labelledby="shop-title">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-label reveal">Ready to stitch</span>
+            <h2 class="section-title reveal" id="shop-title">Shop the collection</h2>
+            <p class="section-subtitle reveal">Custom embroidery you can order straight from the site — pick your size, add your text, we'll stitch it.</p>
+        </div>
+
+        <div class="product-grid">
+            <?php foreach ($featuredProducts as $product): ?>
+                <?= product_card_html($product) ?>
+            <?php endforeach; ?>
+        </div>
+
+        <div style="text-align: center; margin-top: 48px;">
+            <a href="<?= SITE_URL ?>/shop.php" class="btn btn-primary btn-lg reveal">Visit the Shop</a>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
 <section class="section process-section" aria-labelledby="process-title">
     <div class="container">
         <div class="section-header">
@@ -189,35 +225,60 @@ include __DIR__ . '/includes/header.php';
             <span class="section-label reveal">Kind words</span>
             <h2 class="section-title reveal" id="reviews-title">Stitched with love, reviewed with enthusiasm</h2>
         </div>
-        <?php if (empty($testimonials)): ?>
+        <?php if (empty($testimonials) && empty($publicReviews)): ?>
             <div class="empty-state reveal">
                 <p>No reviews yet — be the first to get a piece stitched.</p>
             </div>
         <?php else: ?>
-            <div class="testimonial-grid">
-                <?php foreach ($testimonials as $t): ?>
-                    <article class="testimonial-card reveal">
-                        <span class="testimonial-seal">SM</span>
-                        <?= star_rating((int)$t['rating']) ?>
-                        <p class="testimonial-text">"<?= e($t['content']) ?>"</p>
-                        <div class="testimonial-author">
-                            <?php if ($t['image']): ?>
-                                <img src="<?= SITE_URL . '/' . e($t['image']) ?>" alt="" class="testimonial-avatar" loading="lazy">
-                            <?php else: ?>
-                                <div class="testimonial-avatar" style="display: flex; align-items: center; justify-content: center; background: var(--color-black); color: var(--color-gold); font-weight: 700;"><?= e(strtoupper(mb_substr($t['author_name'], 0, 1))) ?></div>
-                            <?php endif; ?>
-                            <div>
-                                <div class="testimonial-name"><?= e($t['author_name']) ?></div>
-                                <?php if ($t['author_title']): ?>
-                                    <div class="testimonial-title"><?= e($t['author_title']) ?></div>
-                                <?php endif; ?>
+            <?php if (!empty($publicReviews)): ?>
+                <div class="product-grid" style="margin-bottom: 32px;">
+                    <?php foreach ($publicReviews as $r): ?>
+                        <article class="review-card reveal">
+                            <div class="review-card-head">
+                                <?= star_rating((int)$r['rating']) ?>
+                                <strong><?= e($r['author_name']) ?></strong>
+                                <time datetime="<?= e($r['created_at']) ?>"><?= format_date($r['created_at']) ?></time>
                             </div>
-                        </div>
-                    </article>
-                <?php endforeach; ?>
-            </div>
+                            <?php if ($r['title']): ?><h3 class="review-title"><?= e($r['title']) ?></h3><?php endif; ?>
+                            <p><?= e(excerpt($r['content'], 240)) ?></p>
+                            <?php if ($r['product_name']): ?>
+                                <p class="review-product">On <a href="<?= SITE_URL ?>/product/<?= e($r['product_slug']) ?>" style="color: var(--color-gold-dark);"><?= e($r['product_name']) ?></a></p>
+                            <?php endif; ?>
+                            <?php if ($r['admin_reply']): ?>
+                                <div class="review-reply"><strong>Our reply:</strong> <?= e(excerpt($r['admin_reply'], 180)) ?></div>
+                            <?php endif; ?>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($testimonials)): ?>
+                <div class="testimonial-grid">
+                    <?php foreach ($testimonials as $t): ?>
+                        <article class="testimonial-card reveal">
+                            <span class="testimonial-seal">SM</span>
+                            <?= star_rating((int)$t['rating']) ?>
+                            <p class="testimonial-text">"<?= e($t['content']) ?>"</p>
+                            <div class="testimonial-author">
+                                <?php if ($t['image']): ?>
+                                    <img src="<?= SITE_URL . '/' . e($t['image']) ?>" alt="" class="testimonial-avatar" loading="lazy">
+                                <?php else: ?>
+                                    <div class="testimonial-avatar" style="display: flex; align-items: center; justify-content: center; background: var(--color-black); color: var(--color-gold); font-weight: 700;"><?= e(strtoupper(mb_substr($t['author_name'], 0, 1))) ?></div>
+                                <?php endif; ?>
+                                <div>
+                                    <div class="testimonial-name"><?= e($t['author_name']) ?></div>
+                                    <?php if ($t['author_title']): ?>
+                                        <div class="testimonial-title"><?= e($t['author_title']) ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
             <div style="text-align: center; margin-top: 48px;">
-                <a href="<?= SITE_URL ?>/testimonials.php" class="btn btn-secondary btn-lg reveal">Read All Reviews</a>
+                <a href="<?= SITE_URL ?>/reviews.php" class="btn btn-secondary btn-lg reveal">Read All Reviews</a>
             </div>
         <?php endif; ?>
     </div>

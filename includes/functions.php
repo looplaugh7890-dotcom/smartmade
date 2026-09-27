@@ -207,12 +207,21 @@ function delete_upload(string $relativePath): bool {
 }
 
 function send_notification(string $to, string $subject, string $body): bool {
+    if (setting('smtp_host') !== '') {
+        require_once __DIR__ . '/mail.php';
+        $html = '<pre style="white-space:pre-wrap;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;">'
+            . e($body) . '</pre>';
+        if (send_mail($to, $subject, $html, $body, 'notification')) {
+            return true;
+        }
+    }
+
     $headers = "From: " . EMAIL_FROM_NAME . " <" . EMAIL_FROM_ADDRESS . ">\r\n";
     $headers .= "Reply-To: " . EMAIL_FROM_ADDRESS . "\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
 
-    return mail($to, $subject, $body, $headers);
+    return @mail($to, $subject, $body, $headers);
 }
 
 function excerpt(string $text, int $length = 160): string {
@@ -267,4 +276,115 @@ function star_rating(int $rating): string {
     }
     $html .= '</span>';
     return $html;
+}
+
+function money($amount): string {
+    return setting('currency_symbol', '£') . number_format((float)$amount, 2);
+}
+
+function is_customer_logged_in(): bool {
+    return !empty($_SESSION['customer_id']) && !empty($_SESSION['customer_logged_in']);
+}
+
+function customer_id(): ?int {
+    return is_customer_logged_in() ? (int)$_SESSION['customer_id'] : null;
+}
+
+function upload_artwork_file(array $file): string|false {
+    if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
+        return false;
+    }
+    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        return false;
+    }
+    if (($file['size'] ?? 0) > MAX_ARTWORK_SIZE) {
+        return false;
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name']);
+    if (!in_array($mime, ALLOWED_ARTWORK_TYPES, true)) {
+        return false;
+    }
+
+    $extMap = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/gif' => 'gif',
+        'application/pdf' => 'pdf',
+    ];
+    $ext = $extMap[$mime] ?? null;
+    if (!$ext) {
+        return false;
+    }
+
+    $destDir = UPLOAD_PATH . '/artwork';
+    if (!is_dir($destDir)) {
+        mkdir($destDir, 0755, true);
+    }
+
+    $filename = uniqid(date('Ymd') . '_', true) . '.' . $ext;
+    $destPath = $destDir . '/' . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+        return false;
+    }
+
+    if ($ext !== 'pdf' && function_exists('getimagesize')) {
+        smartmade_strip_metadata($destPath, $mime);
+    }
+
+    return 'uploads/artwork/' . $filename;
+}
+
+function activity_log(string $action, ?string $entity = null, ?int $entityId = null, ?string $details = null): void {
+    global $pdo;
+
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO activity_log (admin_id, action, entity, entity_id, details, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $_SESSION['admin_id'] ?? null,
+            $action,
+            $entity,
+            $entityId,
+            $details,
+            $_SERVER['REMOTE_ADDR'] ?? null,
+        ]);
+    } catch (Throwable $e) {
+        error_log('activity_log failed: ' . $e->getMessage());
+    }
+}
+
+function log_email(string $to, string $subject, ?string $template = null, ?string $type = null, ?int $id = null, string $status = 'sent', ?string $error = null): void {
+    global $pdo;
+
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO email_log (to_email, subject, template, related_type, related_id, status, error)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([$to, $subject, $template, $type, $id, $status, $error]);
+    } catch (Throwable $e) {
+        error_log('log_email failed: ' . $e->getMessage());
+    }
+}
+
+function order_status_badge(string $status): string {
+    $map = [
+        'pending' => 'info',
+        'awaiting_payment' => 'info',
+        'paid' => 'success',
+        'in_production' => 'info',
+        'ready' => 'info',
+        'shipped' => 'success',
+        'completed' => 'success',
+        'cancelled' => 'error',
+        'refunded' => 'error',
+    ];
+    $class = $map[$status] ?? 'info';
+    return '<span class="badge badge-' . $class . '">' . e(ucwords(str_replace('_', ' ', $status))) . '</span>';
 }

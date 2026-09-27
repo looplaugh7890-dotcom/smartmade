@@ -9,6 +9,29 @@ $portfolioCount = (int) $pdo->query("SELECT COUNT(*) FROM portfolio_items WHERE 
 $testimonialCount = (int) $pdo->query("SELECT COUNT(*) FROM testimonials WHERE status = 'published'")->fetchColumn();
 $blogCount = (int) $pdo->query("SELECT COUNT(*) FROM blog_posts WHERE status = 'published'")->fetchColumn();
 
+$productCount = (int) $pdo->query("SELECT COUNT(*) FROM products WHERE is_active = 1")->fetchColumn();
+$pendingReviews = (int) $pdo->query("SELECT COUNT(*) FROM reviews WHERE status = 'pending'")->fetchColumn();
+$orderStats = $pdo->query("
+    SELECT
+        COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN grand_total ELSE 0 END), 0) AS revenue,
+        SUM(status IN ('pending','awaiting_payment')) AS unpaid,
+        SUM(status IN ('paid','in_production','ready')) AS open_orders
+    FROM orders
+")->fetch();
+$lowStockThreshold = (int) setting('low_stock_threshold', '5');
+$lowStockCount = (int) $pdo->query("
+    SELECT
+        (SELECT COUNT(*) FROM products WHERE manage_stock = 1 AND is_active = 1 AND stock_quantity <= $lowStockThreshold)
+      + (SELECT COUNT(*) FROM product_variants WHERE manage_stock = 1 AND is_active = 1 AND stock_quantity <= $lowStockThreshold)
+")->fetchColumn();
+
+$recentOrders = $pdo->query("
+    SELECT order_number, name, grand_total, status, payment_status, placed_at, id
+    FROM orders
+    ORDER BY placed_at DESC
+    LIMIT 6
+")->fetchAll();
+
 $recentQuotes = $pdo->query("
     SELECT id, name, order_type, status, submitted_at
     FROM quote_requests
@@ -28,7 +51,43 @@ $pageTitle = 'Dashboard';
 
 <div class="admin-page-header">
     <h1 class="admin-page-title">Dashboard</h1>
-    <a href="<?= SITE_URL ?>/admin/portfolio_add.php" class="admin-btn admin-btn-primary">+ Add Portfolio Item</a>
+    <div>
+        <a href="<?= SITE_URL ?>/admin/product_add.php" class="admin-btn admin-btn-secondary">+ Product</a>
+        <a href="<?= SITE_URL ?>/admin/portfolio_add.php" class="admin-btn admin-btn-primary">+ Add Portfolio Item</a>
+    </div>
+</div>
+
+<div class="admin-stats-grid">
+    <div class="admin-stat-tile">
+        <span class="stat-label">Paid revenue</span>
+        <span class="stat-value"><?= money($orderStats['revenue'] ?? 0) ?></span>
+        <a class="stat-sub" href="<?= SITE_URL ?>/admin/reports.php">View reports →</a>
+    </div>
+    <div class="admin-stat-tile">
+        <span class="stat-label">Open orders</span>
+        <span class="stat-value"><?= (int)($orderStats['open_orders'] ?? 0) ?></span>
+        <a class="stat-sub" href="<?= SITE_URL ?>/admin/orders.php?status=in_production">In production →</a>
+    </div>
+    <div class="admin-stat-tile">
+        <span class="stat-label">Awaiting payment</span>
+        <span class="stat-value"><?= (int)($orderStats['unpaid'] ?? 0) ?></span>
+        <a class="stat-sub" href="<?= SITE_URL ?>/admin/orders.php?payment=unpaid">Chase →</a>
+    </div>
+    <div class="admin-stat-tile">
+        <span class="stat-label">Pending reviews</span>
+        <span class="stat-value"><?= $pendingReviews ?></span>
+        <a class="stat-sub" href="<?= SITE_URL ?>/admin/reviews.php?status=pending">Moderate →</a>
+    </div>
+    <div class="admin-stat-tile">
+        <span class="stat-label">Active products</span>
+        <span class="stat-value"><?= $productCount ?></span>
+        <a class="stat-sub" href="<?= SITE_URL ?>/admin/products.php">Manage →</a>
+    </div>
+    <div class="admin-stat-tile">
+        <span class="stat-label">Low stock lines</span>
+        <span class="stat-value"><?= $lowStockCount ?></span>
+        <a class="stat-sub" href="<?= SITE_URL ?>/admin/reports.php">Check →</a>
+    </div>
 </div>
 
 <div class="admin-stats">
@@ -109,6 +168,36 @@ $pageTitle = 'Dashboard';
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<div class="admin-card reveal" style="margin-top:24px;">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">Recent Orders</h2>
+        <a href="<?= SITE_URL ?>/admin/orders.php" class="admin-btn admin-btn-secondary admin-btn-sm">View all</a>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+                <?php if (empty($recentOrders)): ?>
+                    <tr><td colspan="6" class="admin-empty">No orders yet — <a href="<?= SITE_URL ?>/shop.php" target="_blank">visit the shop</a>.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($recentOrders as $o): ?>
+                        <tr>
+                            <td><a href="<?= SITE_URL ?>/admin/order_view.php?id=<?= (int)$o['id'] ?>"><strong><?= e($o['order_number']) ?></strong></a></td>
+                            <td><?= e($o['name']) ?></td>
+                            <td><?= money($o['grand_total']) ?></td>
+                            <td><span class="badge badge-<?= in_array($o['payment_status'], ['paid']) ? 'success' : (in_array($o['payment_status'], ['failed']) ? 'error' : 'info') ?>"><?= e(ucwords(str_replace('_', ' ', $o['payment_status']))) ?></span></td>
+                            <td><?= order_status_badge($o['status']) ?></td>
+                            <td><?= format_date($o['placed_at'], 'j M Y H:i') ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
 </div>
 

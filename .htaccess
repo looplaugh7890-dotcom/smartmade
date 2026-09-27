@@ -41,3 +41,33 @@ Options -Indexes
     ExpiresByType text/css "access plus 1 week"
     ExpiresByType application/javascript "access plus 1 week"
 </IfModule>
+
+# ---- Security headers ----
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# ---- Clean URLs (Phase 2) ----
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Store & app routes
+    RewriteRule ^shop/?$                      shop.php              [L,QSA]
+    RewriteRule ^shop/([a-z0-9-]+)/?$         shop.php?category=$1  [L,QSA]
+    RewriteRule ^product/([a-z0-9-]+)/?$      product.php?slug=$1   [L,QSA]
+    RewriteRule ^gallery/?$                   gallery.php           [L,QSA]
+    RewriteRule ^reviews/?$                   reviews.php           [L,QSA]
+    RewriteRule ^search/?$                    search.php            [L,QSA]
+    RewriteRule ^cart/?$                      cart.php              [L,QSA]
+    RewriteRule ^checkout/?$                  checkout.php          [L,QSA]
+    RewriteRule ^order/([A-Za-z0-9-]+)/?$     order-confirmation.php?ref=$1 [L,QSA]
+    RewriteRule ^account/?$                   account.php           [L,QSA]
+    RewriteRule ^account/([a-z-]+)/?$          account.php?page=$1   [L,QSA]
+    RewriteRule ^sitemap\.xml$                sitemap.php           [L]
+</IfModule>

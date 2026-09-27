@@ -28,3 +28,11 @@ define('EMAIL_FROM_ADDRESS', 'hello@smartmade.example');
 
 define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024);
 define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
+define('ALLOWED_ARTWORK_TYPES', ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']);
+define('MAX_ARTWORK_SIZE', 10 * 1024 * 1024);
+
+// Optional local overrides (production DB credentials / keys) — never committed.
+if (is_file(__DIR__ . '/config.local.php')) {
+    require __DIR__ . '/config.local.php';
+}

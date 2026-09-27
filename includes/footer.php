@@ -88,6 +88,26 @@ $currentYear = date('Y');
                     </div>
                 </div>
 
+                <div class="footer-newsletter">
+                    <form action="<?= SITE_URL ?>/newsletter.php" method="post" class="footer-newsletter-form">
+                        <?= csrf_field() ?>
+                        <label for="newsletter-email" class="footer-newsletter-label">Get new drops &amp; studio stories</label>
+                        <div class="footer-newsletter-row">
+                            <input type="email" id="newsletter-email" name="email" class="form-input" placeholder="you@example.com" required>
+                            <button type="submit" class="btn btn-primary">Join</button>
+                        </div>
+                        <?php if (has_flash('success')): ?>
+                            <p class="footer-newsletter-msg" style="color: var(--color-gold-light);"><?= e(get_flash('success')) ?></p>
+                        <?php endif; ?>
+                        <?php if (has_flash('error')): ?>
+                            <p class="footer-newsletter-msg" style="color: #F0A0A0;"><?= e(get_flash('error')) ?></p>
+                        <?php endif; ?>
+                        <?php if (has_flash('info')): ?>
+                            <p class="footer-newsletter-msg" style="color: rgba(245,242,236,0.7);"><?= e(get_flash('info')) ?></p>
+                        <?php endif; ?>
+                    </form>
+                </div>
+
                 <div class="footer-legal">
                     <p class="copyright">&copy; <?= $currentYear ?> SmartMade Embroidery. All rights reserved.</p>
                     <ul class="legal-links">
@@ -100,5 +120,6 @@ $currentYear = date('Y');
     </footer>
 
     <script src="<?= SITE_URL ?>/assets/js/main.js" defer></script>
+    <script src="<?= SITE_URL ?>/assets/js/store.js" defer></script>
 </body>
 </html>

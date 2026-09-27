@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($_POST['email'] ?? '');
         $phone = trim($_POST['phone'] ?? '');
         $orderTypePost = $_POST['order_type'] ?? 'custom_original';
+        $service = trim($_POST['service'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $quantity = max(1, (int)($_POST['quantity'] ?? 1));
         $deadline = $_POST['deadline'] ?? null;
@@ -47,20 +48,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        $attachmentPaths = [];
+        if (!empty($_FILES['attachments']['tmp_name'])) {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $destDir = UPLOAD_PATH . '/quotes';
+            if (!is_dir($destDir)) {
+                mkdir($destDir, 0755, true);
+            }
+
+            foreach ((array)$_FILES['attachments']['tmp_name'] as $i => $tmp) {
+                $file = [
+                    'name' => $_FILES['attachments']['name'][$i] ?? '',
+                    'tmp_name' => $tmp,
+                    'error' => $_FILES['attachments']['error'][$i] ?? UPLOAD_ERR_NO_FILE,
+                    'size' => $_FILES['attachments']['size'][$i] ?? 0,
+                ];
+
+                if ($file['error'] === UPLOAD_ERR_NO_FILE || $file['tmp_name'] === '') {
+                    continue;
+                }
+                if ($file['error'] !== UPLOAD_ERR_OK || $file['size'] > MAX_ARTWORK_SIZE || count($attachmentPaths) >= 3) {
+                    $errors[] = 'An attachment could not be saved (max 3 files, ' . (int)(MAX_ARTWORK_SIZE / 1048576) . 'MB each).';
+                    continue;
+                }
+
+                $mime = $finfo->file($file['tmp_name']);
+                if (!in_array($mime, ALLOWED_ARTWORK_TYPES, true)) {
+                    $errors[] = 'Attachments must be JPG, PNG, WebP, GIF or PDF.';
+                    continue;
+                }
+
+                $extMap = [
+                    'image/jpeg' => 'jpg',
+                    'image/png' => 'png',
+                    'image/webp' => 'webp',
+                    'image/gif' => 'gif',
+                    'application/pdf' => 'pdf',
+                ];
+                $ext = $extMap[$mime] ?? 'bin';
+                $filename = uniqid(date('Ymd') . '_', true) . '.' . $ext;
+                if (move_uploaded_file($file['tmp_name'], $destDir . '/' . $filename)) {
+                    $attachmentPaths[] = [
+                        'path' => 'uploads/quotes/' . $filename,
+                        'name' => mb_substr($file['name'], 0, 200),
+                        'type' => $mime,
+                        'size' => (int)$file['size'],
+                    ];
+                } else {
+                    $errors[] = 'An attachment could not be saved.';
+                }
+            }
+        }
+
         if (empty($errors)) {
             $stmt = $pdo->prepare("
                 INSERT INTO quote_requests
-                (name, email, phone, order_type, description, reference_image, quantity, deadline, budget_range)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (name, email, phone, order_type, service, description, reference_image, quantity, deadline, budget_range)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
-                $name, $email, $phone, $orderTypePost, $description, $referenceImage, $quantity,
+                $name, $email, $phone, $orderTypePost, $service ?: null, $description, $referenceImage, $quantity,
                 $deadline ?: null, $budget
             ]);
+            $quoteId = (int) $pdo->lastInsertId();
+
+            if ($attachmentPaths) {
+                $att = $pdo->prepare("
+                    INSERT INTO quote_attachments (quote_id, file_path, original_name, file_type, file_size)
+                    VALUES (?, ?, ?, ?, ?)
+                ");
+                foreach ($attachmentPaths as $file) {
+                    $att->execute([$quoteId, $file['path'], $file['name'], $file['type'], $file['size']]);
+                }
+            }
 
             $subject = 'New SmartMade quote request from ' . $name;
-            $body = "Name: $name\nEmail: $email\nPhone: $phone\nType: $orderTypePost\nQuantity: $quantity\nDeadline: $deadline\nBudget: $budget\n\nIdea:\n$description";
+            $body = "Name: $name\nEmail: $email\nPhone: $phone\nType: $orderTypePost\nService: $service\nQuantity: $quantity\nDeadline: $deadline\nBudget: $budget\nAttachments: " . count($attachmentPaths) . "\n\nIdea:\n$description";
             send_notification(ADMIN_EMAIL, $subject, $body);
+
+            require_once __DIR__ . '/includes/mail.php';
+            $qStmt = $pdo->prepare("SELECT * FROM quote_requests WHERE id = ?");
+            $qStmt->execute([$quoteId]);
+            if ($qRow = $qStmt->fetch()) {
+                send_quote_received($qRow);
+            }
 
             $success = true;
         }
@@ -127,6 +198,15 @@ include __DIR__ . '/includes/header.php';
                             <option value="other" <?= $orderType === 'other' ? 'selected' : '' ?>>Something else</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="service" class="form-label">Service *</label>
+                        <select id="service" name="service" class="form-select" required>
+                            <option value="" <?= ($service ?? '') === '' ? 'selected' : '' ?>>Choose a service…</option>
+                            <?php foreach (['Embroidery', 'Printing', 'Promotional products', 'Artwork & digitising', 'Not sure yet'] as $opt): ?>
+                                <option value="<?= e($opt) ?>" <?= (($_POST['service'] ?? '') === $opt) ? 'selected' : '' ?>><?= e($opt) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <div class="form-group form-group-full">
                         <label for="description" class="form-label">Tell us about your idea *</label>
                         <textarea id="description" name="description" class="form-textarea" required placeholder="e.g. A caricature of my mate in a Dunfermline top, or my barbershop logo on 4 black polo shirts..."><?= e($_POST['description'] ?? '') ?></textarea>
@@ -135,6 +215,11 @@ include __DIR__ . '/includes/header.php';
                         <label for="reference_image" class="form-label">Reference image <span>(optional, max 5MB)</span></label>
                         <input type="file" id="reference_image" name="reference_image" class="form-input form-file" accept="image/jpeg,image/png,image/webp,image/gif">
                         <p class="form-hint">Upload a logo, photo, sketch, or inspiration image. We'll handle the digitising.</p>
+                    </div>
+                    <div class="form-group form-group-full">
+                        <label for="attachments" class="form-label">Extra files <span>(optional — up to 3 files, JPG/PNG/WebP/GIF/PDF)</span></label>
+                        <input type="file" id="attachments" name="attachments[]" class="form-input form-file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" multiple>
+                        <p class="form-hint">Logos, sketches, reference sheets or a PDF brief — attach them all in one go.</p>
                     </div>
                     <div class="form-group">
                         <label for="quantity" class="form-label">Quantity *</label>

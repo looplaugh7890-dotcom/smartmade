@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /uploads/
+Disallow: /checkout.php
+Disallow: /cart.php
+Disallow: /account.php
+Disallow: /payment_callback.php
+Disallow: /webhook.php
+Disallow: /search.php
+Disallow: /*.php$
+
+Sitemap: http://localhost/smartmade/sitemap.xml

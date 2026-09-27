@@ -11,6 +11,13 @@ if (!isset($pageTitle)) {
 
 $currentScript = basename($_SERVER['PHP_SELF']);
 $adminName = $_SESSION['admin_name'] ?? 'Admin';
+
+$adminOnlyScripts = ['settings.php', 'seo.php', 'activity.php', 'reports.php'];
+if (in_array($currentScript, $adminOnlyScripts, true) && (($_SESSION['admin_role'] ?? 'editor') !== 'admin')) {
+    set_flash('error', 'You need an administrator account to open that page.');
+    header('Location: ' . SITE_URL . '/admin/dashboard.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en-GB">
@@ -48,24 +55,60 @@ $adminName = $_SESSION['admin_name'] ?? 'Admin';
                 <li class="<?= $currentScript === 'dashboard.php' ? 'is-active' : '' ?>">
                     <a href="<?= SITE_URL ?>/admin/dashboard.php">Dashboard</a>
                 </li>
+
+                <li class="admin-nav-heading">Store</li>
+                <li class="<?= in_array($currentScript, ['products.php', 'product_add.php', 'product_edit.php', 'product_images.php', 'product_variants.php', 'product_pers.php', 'product_categories.php']) ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/products.php">Products</a>
+                </li>
+                <li class="<?= in_array($currentScript, ['orders.php', 'order_view.php']) ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/orders.php">Orders</a>
+                </li>
+                <li class="<?= in_array($currentScript, ['customers.php', 'customer_view.php']) ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/customers.php">Customers</a>
+                </li>
+                <li class="<?= in_array($currentScript, ['coupons.php', 'shipping.php']) ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/coupons.php">Coupons &amp; Shipping</a>
+                </li>
+
+                <li class="admin-nav-heading">Content</li>
                 <li class="<?= in_array($currentScript, ['portfolio.php', 'portfolio_add.php', 'portfolio_edit.php']) ? 'is-active' : '' ?>">
                     <a href="<?= SITE_URL ?>/admin/portfolio.php">Portfolio</a>
                 </li>
+                <li class="<?= in_array($currentScript, ['gallery.php', 'gallery_add.php', 'gallery_edit.php']) ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/gallery.php">Gallery</a>
+                </li>
+                <li class="<?= in_array($currentScript, ['reviews.php', 'review_view.php', 'testimonials.php', 'testimonial_add.php', 'testimonial_edit.php']) ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/reviews.php">Reviews &amp; Testimonials</a>
+                </li>
+                <li class="<?= in_array($currentScript, ['blog.php', 'blog_add.php', 'blog_edit.php']) ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/blog.php">Journal</a>
+                </li>
+
+                <li class="admin-nav-heading">Enquiries</li>
                 <li class="<?= in_array($currentScript, ['quotes.php', 'quote_view.php']) ? 'is-active' : '' ?>">
                     <a href="<?= SITE_URL ?>/admin/quotes.php">Quote Requests</a>
                 </li>
                 <li class="<?= in_array($currentScript, ['messages.php', 'message_view.php']) ? 'is-active' : '' ?>">
                     <a href="<?= SITE_URL ?>/admin/messages.php">Messages</a>
                 </li>
-                <li class="<?= in_array($currentScript, ['testimonials.php', 'testimonial_add.php', 'testimonial_edit.php']) ? 'is-active' : '' ?>">
-                    <a href="<?= SITE_URL ?>/admin/testimonials.php">Testimonials</a>
+
+                <li class="admin-nav-heading">Operations</li>
+                <li class="<?= $currentScript === 'reports.php' ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/reports.php">Reports</a>
                 </li>
-                <li class="<?= in_array($currentScript, ['blog.php', 'blog_add.php', 'blog_edit.php']) ? 'is-active' : '' ?>">
-                    <a href="<?= SITE_URL ?>/admin/blog.php">Journal</a>
+                <li class="<?= $currentScript === 'subscribers.php' ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/subscribers.php">Subscribers</a>
+                </li>
+                <li class="<?= $currentScript === 'seo.php' ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/seo.php">SEO &amp; Meta</a>
+                </li>
+                <li class="<?= $currentScript === 'activity.php' ? 'is-active' : '' ?>">
+                    <a href="<?= SITE_URL ?>/admin/activity.php">Activity Log</a>
                 </li>
                 <li class="<?= $currentScript === 'settings.php' ? 'is-active' : '' ?>">
                     <a href="<?= SITE_URL ?>/admin/settings.php">Settings</a>
                 </li>
+
                 <li class="admin-nav-spacer"></li>
                 <li><a href="<?= SITE_URL ?>/" target="_blank">View Site ↗</a></li>
             </ul>

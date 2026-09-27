@@ -19,26 +19,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($email) || empty($password)) {
             $errors[] = 'Please enter both email and password.';
         } else {
-            $stmt = $pdo->prepare("SELECT id, name, email, password_hash, role FROM admin_users WHERE email = ? LIMIT 1");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch();
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            $attempts = $pdo->prepare("
+                SELECT
+                    SUM(CASE WHEN ip_address = ? AND success = 0 AND attempted_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE) THEN 1 ELSE 0 END) AS ip_fails,
+                    SUM(CASE WHEN email = ? AND success = 0 AND attempted_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE) THEN 1 ELSE 0 END) AS email_fails
+                FROM admin_login_attempts
+            ");
+            $attempts->execute([$ip, $email]);
+            $attempts = $attempts->fetch();
 
-            if ($user && password_verify($password, $user['password_hash'])) {
-                $_SESSION['admin_id'] = $user['id'];
-                $_SESSION['admin_name'] = $user['name'];
-                $_SESSION['admin_email'] = $user['email'];
-                $_SESSION['admin_role'] = $user['role'];
-                $_SESSION['admin_logged_in'] = true;
-
-                $update = $pdo->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
-                $update->execute([$user['id']]);
-
-                $redirect = $_SESSION['redirect_after_login'] ?? SITE_URL . '/admin/dashboard.php';
-                unset($_SESSION['redirect_after_login']);
-                header('Location: ' . $redirect);
-                exit;
+            if ((int)$attempts['ip_fails'] >= 10 || (int)$attempts['email_fails'] >= 5) {
+                $errors[] = 'Too many failed sign-in attempts. Please wait 15 minutes and try again.';
+                $record = $pdo->prepare("INSERT INTO admin_login_attempts (email, ip_address, success) VALUES (?, ?, 0)");
+                $record->execute([$email, $ip]);
             } else {
-                $errors[] = 'Invalid email or password.';
+                $stmt = $pdo->prepare("SELECT id, name, email, password_hash, role FROM admin_users WHERE email = ? LIMIT 1");
+                $stmt->execute([$email]);
+                $user = $stmt->fetch();
+
+                if ($user && password_verify($password, $user['password_hash'])) {
+                    $record = $pdo->prepare("INSERT INTO admin_login_attempts (email, ip_address, success) VALUES (?, ?, 1)");
+                    $record->execute([$email, $ip]);
+
+                    $_SESSION['admin_id'] = $user['id'];
+                    $_SESSION['admin_name'] = $user['name'];
+                    $_SESSION['admin_email'] = $user['email'];
+                    $_SESSION['admin_role'] = $user['role'];
+                    $_SESSION['admin_logged_in'] = true;
+
+                    $update = $pdo->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
+                    $update->execute([$user['id']]);
+
+                    activity_log('admin.login', 'admin', (int)$user['id'], $user['email']);
+
+                    $redirect = $_SESSION['redirect_after_login'] ?? SITE_URL . '/admin/dashboard.php';
+                    unset($_SESSION['redirect_after_login']);
+                    header('Location: ' . $redirect);
+                    exit;
+                } else {
+                    $record = $pdo->prepare("INSERT INTO admin_login_attempts (email, ip_address, success) VALUES (?, ?, 0)");
+                    $record->execute([$email, $ip]);
+                    $errors[] = 'Invalid email or password.';
+                }
             }
         }
     }

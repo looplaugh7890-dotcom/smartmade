@@ -1,0 +1,9 @@
+# Runtime uploads — never commit customer files
+/uploads/*
+!/uploads/.htaccess
+
+# Local planning notes / scratch
+AI_STUDIO_PROMPT.md
+
+/includes/config.local.php
+
