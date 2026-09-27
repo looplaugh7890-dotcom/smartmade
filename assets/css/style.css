@@ -151,7 +151,53 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: clamp(12px, 2vw, 28px);
     height: 100%;
+}
+
+.primary-nav {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.header-cta {
+    white-space: nowrap;
+    padding: 10px 20px;
+    font-size: 0.88rem;
+}
+
+.primary-nav .nav-cta-mobile {
+    display: none;
+}
+
+.nav-backdrop {
+    position: fixed;
+    inset: var(--header-height) 0 0;
+    background: rgba(10, 10, 10, 0.45);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 1001;
+}
+
+.nav-backdrop.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+body.nav-open {
+    overflow: hidden;
 }
 
 .logo {
@@ -162,6 +208,7 @@ button {
     font-weight: 900;
     font-size: 1.5rem;
     color: var(--color-black);
+    flex-shrink: 0;
 }
 
 .logo-mark {
@@ -209,7 +256,12 @@ button {
 .nav-list {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 2px;
+    flex-wrap: nowrap;
+}
+
+.nav-item {
+    flex-shrink: 0;
 }
 
 .nav-link {
@@ -217,10 +269,11 @@ button {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 14px;
+    padding: 10px clamp(8px, 0.9vw, 14px);
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 0.925rem;
     color: var(--color-text);
+    white-space: nowrap;
     transition: color var(--transition-base);
 }
 
@@ -1734,9 +1787,9 @@ body.modal-open {
     }
 }
 
-@media (max-width: 768px) {
-    :root {
-        --header-height: 68px;
+@media (max-width: 1100px) {
+    .header-actions {
+        margin-left: auto;
     }
 
     .nav-toggle {
@@ -1749,8 +1802,9 @@ body.modal-open {
         left: 0;
         right: 0;
         bottom: 0;
-        background: #FFFFFF;
-        padding: 32px;
+        display: block;
+        background: var(--color-white);
+        padding: clamp(24px, 5vw, 40px);
         transform: translateX(100%);
         visibility: hidden;
         transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.35s ease;
@@ -1766,17 +1820,26 @@ body.modal-open {
 
     .nav-list {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+        align-items: stretch;
+        gap: 4px;
     }
 
     .nav-link {
-        font-size: 1.25rem;
-        padding: 12px 0;
+        font-size: 1.2rem;
+        padding: 13px 0;
+        gap: 14px;
     }
 
-    .nav-item-cta {
-        margin-top: 16px;
+    .nav-link:hover .nav-thread,
+    .nav-item.is-active .nav-thread {
+        width: 26px;
+    }
+
+    .primary-nav .nav-cta-mobile {
+        display: inline-flex;
+        margin-top: 26px;
+        padding: 14px 30px;
+        font-size: 1rem;
     }
 
     .nav-toggle.is-open .nav-toggle-bar:nth-child(1) {
@@ -1789,6 +1852,16 @@ body.modal-open {
 
     .nav-toggle.is-open .nav-toggle-bar:nth-child(3) {
         transform: translateY(-7px) rotate(-45deg);
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --header-height: 68px;
+    }
+
+    .header-cta {
+        display: none;
     }
 
     
@@ -2322,7 +2395,6 @@ body.modal-open {
 @media (max-width: 480px) {
     .product-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
     .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .mini-cart { margin-left: 8px; }
 }
 
 /* Footer newsletter */
@@ -2334,4 +2406,141 @@ body.modal-open {
 .footer-newsletter-msg { font-size: 0.85rem; margin: 10px 0 0; }
 @media (max-width: 480px) {
     .footer-newsletter-row { flex-direction: column; }
+}
+
+/* ============================================================================
+   Polish pass 2 — accessibility, micro-UI and component refinements
+   ========================================================================== */
+
+::selection {
+    background: var(--color-gold);
+    color: var(--color-black);
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-gold-dark);
+    outline-offset: 3px;
+}
+
+.form-input:focus-visible,
+.form-textarea:focus-visible,
+.form-select:focus-visible {
+    outline: none;
+}
+
+::placeholder {
+    color: #9A9A9A;
+    opacity: 1;
+}
+
+/* Custom select chevron ---------------------------------------------------- */
+.form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 42px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%230A0A0A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    cursor: pointer;
+}
+
+/* File inputs -------------------------------------------------------------- */
+input[type="file"] {
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    max-width: 100%;
+}
+
+input[type="file"]::file-selector-button {
+    margin: 0 12px 0 0;
+    padding: 10px 18px;
+    border: 1.5px solid var(--color-black);
+    border-radius: var(--radius-full);
+    background: var(--color-white);
+    color: var(--color-black);
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: var(--color-black);
+    color: var(--color-cream);
+}
+
+/* Ratings ------------------------------------------------------------------ */
+.rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.product-meta-row .rating {
+    flex-shrink: 0;
+}
+
+.rating-count:hover {
+    color: var(--color-gold-dark);
+    text-decoration: underline;
+}
+
+/* Empty states ------------------------------------------------------------- */
+.empty-state {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: clamp(40px, 7vw, 72px) clamp(24px, 5vw, 48px);
+    background: var(--color-white);
+    border: 1.5px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.empty-state h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+    color: var(--color-black);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    margin-bottom: 26px;
+}
+
+.empty-state .btn {
+    margin: 6px 5px;
+}
+
+/* Prose links -------------------------------------------------------------- */
+.content-block a:not(.btn),
+.page-intro a:not(.btn) {
+    text-decoration: underline;
+    text-decoration-color: var(--color-gold);
+    text-underline-offset: 3px;
+}
+
+/* Shop controls ------------------------------------------------------------ */
+.shop-search-form {
+    align-items: stretch;
+}
+
+.shop-search-form .btn {
+    align-self: stretch;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.shop-sort-form {
+    display: flex;
+    align-items: center;
+}
+
+.product-card:hover {
+    border-color: rgba(10, 10, 10, 0.24);
+}
+
+.site-header.is-scrolled {
+    border-bottom-color: rgba(10, 10, 10, 0.16);
 }

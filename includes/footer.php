@@ -51,7 +51,10 @@ $currentYear = date('Y');
                     <div class="footer-nav-group">
                         <h3 class="footer-nav-title">Explore</h3>
                         <ul class="footer-nav-list">
+                            <li><a href="<?= SITE_URL ?>/">Home</a></li>
+                            <li><a href="<?= SITE_URL ?>/shop.php">Shop</a></li>
                             <li><a href="<?= SITE_URL ?>/portfolio.php">Portfolio</a></li>
+                            <li><a href="<?= SITE_URL ?>/gallery.php">Gallery</a></li>
                             <li><a href="<?= SITE_URL ?>/services.php">Services</a></li>
                             <li><a href="<?= SITE_URL ?>/about.php">About</a></li>
                             <li><a href="<?= SITE_URL ?>/blog.php">Journal</a></li>

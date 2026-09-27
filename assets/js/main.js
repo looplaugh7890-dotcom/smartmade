@@ -29,14 +29,14 @@
 
         primaryNav.querySelectorAll('a').forEach(function (link) {
             link.addEventListener('click', function () {
-                if (window.innerWidth <= 768) {
+                if (window.innerWidth <= 1100) {
                     toggleNav(false);
                 }
             });
         });
 
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && primaryNav.classList.contains('is-open') && window.innerWidth <= 768) {
+            if (e.key === 'Escape' && primaryNav.classList.contains('is-open') && window.innerWidth <= 1100) {
                 toggleNav(false);
             }
         });
