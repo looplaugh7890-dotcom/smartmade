@@ -188,7 +188,11 @@ button {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
-    z-index: 1001;
+    z-index: 999;
+}
+
+body.nav-open .site-header {
+    z-index: 1010;
 }
 
 .nav-backdrop.is-visible {
@@ -2925,4 +2929,147 @@ body.drawer-open {
         width: 64px;
         height: 80px;
     }
+}
+/* ===== Premium gradient accents (black / cream / gold) ===== */
+
+/* Warm ambient glow behind the home hero */
+.hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(760px 460px at 78% 22%, rgba(201, 162, 39, 0.16), transparent 65%),
+        radial-gradient(620px 420px at 8% 84%, rgba(201, 162, 39, 0.10), transparent 68%);
+    pointer-events: none;
+}
+
+/* Gradient headline accent */
+.hero-title-accent {
+    background: linear-gradient(100deg, var(--color-gold-dark) 0%, #E4C55C 48%, var(--color-gold-dark) 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--color-gold-dark);
+    animation: accent-shift 9s ease-in-out infinite alternate;
+}
+
+@keyframes accent-shift {
+    from { background-position: 0% 50%; }
+    to   { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-title-accent { animation: none; }
+}
+
+/* Primary CTAs: layered gold gradient with a soft glow */
+.btn-primary {
+    background: linear-gradient(135deg, #E4C55C 0%, var(--color-gold) 45%, var(--color-gold-dark) 100%);
+    border-color: transparent;
+    box-shadow: 0 10px 24px -12px rgba(201, 162, 39, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #D9B849 0%, var(--color-gold-dark) 55%, #8F7216 100%);
+    border-color: transparent;
+    color: var(--color-black);
+    box-shadow: 0 14px 30px -12px rgba(201, 162, 39, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Hairline gradient dividers between sections */
+.section + .section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(1080px, calc(100% - 48px));
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.55) 18%, rgba(201, 162, 39, 0.55) 82%, transparent);
+    pointer-events: none;
+}
+
+/* Section label: solid gold gradient rule */
+.section-label::before {
+    background: linear-gradient(90deg, var(--color-gold-dark), var(--color-gold));
+}
+
+/* Cards and tiles: warm lift on hover */
+.service-card:hover,
+.blog-card:hover,
+.review-card:hover,
+.testimonial-card:hover,
+.pillar-card:hover,
+.product-card:hover,
+.gallery-item:hover,
+.portfolio-item:hover {
+    box-shadow:
+        0 24px 48px -26px rgba(10, 10, 10, 0.35),
+        0 16px 42px -24px rgba(201, 162, 39, 0.55);
+}
+
+/* Hero photo: warm gold halo */
+.hero-image-wrap {
+    box-shadow: var(--shadow-lg), 0 34px 70px -40px rgba(201, 162, 39, 0.85);
+}
+
+/* CTA band: gold gradient with a light sweep */
+.footer-cta {
+    background: linear-gradient(120deg, #E0BE4B 0%, var(--color-gold) 45%, #B4901C 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.footer-cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(520px 260px at 85% 15%, rgba(255, 255, 255, 0.38), transparent 70%);
+    pointer-events: none;
+}
+
+.footer-cta-inner {
+    position: relative;
+    z-index: 1;
+}
+
+/* Inner page hero: quiet gold glow on black */
+.page-header {
+    background-image:
+        radial-gradient(680px 320px at 82% 18%, rgba(201, 162, 39, 0.18), transparent 70%),
+        radial-gradient(520px 300px at 8% 100%, rgba(201, 162, 39, 0.10), transparent 72%);
+}
+
+/* Footer: deep black with a soft gold bloom */
+.footer-main {
+    background-image:
+        radial-gradient(760px 360px at 88% -12%, rgba(201, 162, 39, 0.16), transparent 70%),
+        radial-gradient(520px 320px at 2% 106%, rgba(201, 162, 39, 0.10), transparent 72%);
+}
+
+/* Selection + scrollbar */
+::selection {
+    background: rgba(201, 162, 39, 0.32);
+    color: var(--color-black);
+}
+
+::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-cream);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-gold-dark) 100%);
+    border-radius: 999px;
+    border: 2px solid var(--color-cream);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--color-gold-dark) 0%, #8F7216 100%);
 }
