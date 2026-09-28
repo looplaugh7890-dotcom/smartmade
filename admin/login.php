@@ -112,5 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Change this immediately after first login.
         </p>
     </div>
+    <script src="<?= SITE_URL ?>/assets/js/admin.js" defer></script>
 </body>
 </html>

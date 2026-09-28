@@ -18,6 +18,38 @@ if (in_array($currentScript, $adminOnlyScripts, true) && (($_SESSION['admin_role
     header('Location: ' . SITE_URL . '/admin/dashboard.php');
     exit;
 }
+
+$adminHelpMap = [
+    'dashboard.php'         => 'Your at-a-glance overview. Anything with a number needs your attention today.',
+    'products.php'          => 'Add products, adjust prices and stock, and open a product to manage its photos, sizes and personalisation options.',
+    'product_add.php'       => 'Only the name, price and category are required. You can add photos and options after saving.',
+    'product_edit.php'      => 'Changes here go live on the site as soon as you save.',
+    'product_images.php'    => 'Drag-free photo management: upload, set the main image, or remove photos.',
+    'product_variants.php'  => 'Sizes, colours and stock levels. Stock counts update automatically when orders are placed.',
+    'product_pers.php'      => 'Personalisation questions customers fill in when they order (name, position, extra notes).',
+    'product_categories.php'=> 'Categories are used on the shop page and in the customer filters.',
+    'orders.php'            => 'Open an order to update payment and production status — the customer is emailed automatically.',
+    'order_view.php'        => 'Update the status when you move the order along. Status changes are emailed to the customer.',
+    'customers.php'         => 'Everyone who has ordered or created an account.',
+    'customer_view.php'     => 'Order history and contact details for this customer.',
+    'coupons.php'           => 'Discount codes and delivery charges shown at checkout.',
+    'shipping.php'          => 'Delivery options and prices customers pick at checkout.',
+    'quotes.php'            => 'Quote requests from the website. Open one to reply and mark it completed.',
+    'quote_view.php'        => 'Reply to the customer, then mark the quote completed so it leaves your todo list.',
+    'messages.php'          => 'Messages sent from the contact form on your site.',
+    'reviews.php'           => 'Approve, feature or reject customer reviews — only approved reviews appear on the site.',
+    'gallery.php'           => 'The work gallery customers browse for inspiration.',
+    'portfolio.php'         => 'Portfolio pieces shown on the Portfolio page.',
+    'blog.php'              => 'Journal posts (news and articles) shown on your site.',
+    'testimonials.php'      => 'Short quotes from happy customers, shown across the site.',
+    'reports.php'           => 'Sales, orders and product performance over time.',
+    'subscribers.php'       => 'People who signed up for your newsletter.',
+    'seo.php'               => 'Page titles and descriptions Google shows in search results.',
+    'activity.php'          => 'A record of changes made in the admin panel — useful if something looks wrong.',
+    'settings.php'          => 'Store-wide settings. Press Save at the bottom of each tab — changes apply immediately.',
+    'profile.php'           => 'Your sign-in details for this admin panel.',
+];
+$adminHelp = $pageHelp ?? ($adminHelpMap[$currentScript] ?? null);
 ?>
 <!DOCTYPE html>
 <html lang="en-GB">
@@ -126,3 +158,9 @@ if (in_array($currentScript, $adminOnlyScripts, true) && (($_SESSION['admin_role
             <?php endif; ?>
 
             <div class="admin-content">
+                <div class="admin-topbar" id="admin-topbar">
+                    <nav class="admin-breadcrumb" id="admin-breadcrumb" aria-label="Breadcrumb"></nav>
+                    <?php if (!empty($adminHelp)): ?>
+                        <p class="admin-page-help"><?= e($adminHelp) ?></p>
+                    <?php endif; ?>
+                </div>
