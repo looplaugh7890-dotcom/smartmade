@@ -6,9 +6,42 @@ require_once __DIR__ . '/includes/seo.php';
 
 $errors = [];
 
+function cart_wants_json(): bool
+{
+    return strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
+}
+
+function cart_send_json(bool $ok, string $message): void
+{
+    $totals = cart_totals();
+    $items = $totals['items'];
+    $drawerItems = $items;
+    $drawerTotals = $totals;
+
+    ob_start();
+    include __DIR__ . '/includes/cart_drawer_partial.php';
+    $html = ob_get_clean();
+
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Cache-Control: no-store');
+    echo json_encode([
+        'ok' => $ok,
+        'message' => $message,
+        'count' => array_sum(array_column($items, 'quantity')),
+        'html' => $html,
+    ]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $isAjax = cart_wants_json();
+
     if (!verify_csrf()) {
-        $errors[] = 'Security token invalid. Please refresh and try again.';
+        $message = 'Security token invalid. Please refresh and try again.';
+        if ($isAjax) {
+            cart_send_json(false, $message);
+        }
+        $errors[] = $message;
     } else {
         $action = $_POST['action'] ?? '';
         $itemId = (int)($_POST['item_id'] ?? 0);
@@ -16,24 +49,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'update') {
             $result = cart_update_item($itemId, (int)($_POST['quantity'] ?? 1));
             if (!$result['ok']) {
+                if ($isAjax) {
+                    cart_send_json(false, $result['message']);
+                }
                 $errors[] = $result['message'];
             } else {
+                if ($isAjax) {
+                    cart_send_json(true, $result['message']);
+                }
                 set_flash('success', $result['message']);
                 header('Location: ' . canonical_url('cart'));
                 exit;
             }
         } elseif ($action === 'remove') {
             $result = cart_remove_item($itemId);
+            if ($isAjax) {
+                cart_send_json((bool)$result['ok'], $result['message']);
+            }
             set_flash('info', $result['message']);
             header('Location: ' . canonical_url('cart'));
             exit;
         } elseif ($action === 'coupon') {
             $result = cart_set_coupon(trim((string)($_POST['coupon'] ?? '')));
+            if ($isAjax) {
+                cart_send_json((bool)$result['ok'], $result['message']);
+            }
             set_flash($result['ok'] ? 'success' : 'error', $result['message']);
             header('Location: ' . canonical_url('cart'));
             exit;
         } elseif ($action === 'clear') {
             cart_clear();
+            if ($isAjax) {
+                cart_send_json(true, 'Your basket has been emptied.');
+            }
             set_flash('info', 'Your basket has been emptied.');
             header('Location: ' . canonical_url('cart'));
             exit;

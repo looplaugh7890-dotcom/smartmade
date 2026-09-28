@@ -27,7 +27,7 @@
         }
 
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && adminNav.classList.contains('is-open') && window.innerWidth <= 768) {
+            if (e.key === 'Escape' && adminNav.classList.contains('is-open') && window.innerWidth <= 1024) {
                 toggleAdminNav(false);
             }
         });

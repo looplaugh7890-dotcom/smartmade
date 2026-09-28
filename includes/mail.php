@@ -110,18 +110,21 @@ function smtp_send_mail(string $to, string $subject, string $html, string $plain
     $expect($read(), '354');
 
     $headers = 'From: ' . sprintf('=?UTF-8?B?%s?= <%s>', base64_encode($fromName), $fromAddress) . "\r\n";
+    $headers .= 'Reply-To: <' . setting('contact_email', $fromAddress) . ">\r\n";
     $headers .= 'To: <' . $to . ">\r\n";
     $headers .= 'Subject: =?UTF-8?B?' . base64_encode($subject) . "?=\r\n";
     $headers .= 'MIME-Version: 1.0' . "\r\n";
     $headers .= 'Content-Type: multipart/alternative; boundary="smartmade-mail-boundary"' . "\r\n";
     $headers .= 'Date: ' . date('r') . "\r\n";
+    $headers .= 'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . (parse_url(SITE_URL, PHP_URL_HOST) ?: 'localhost') . ">\r\n";
+    $headers .= 'X-Mailer: SmartMade Mailer' . "\r\n";
 
     $body = '--smartmade-mail-boundary' . "\r\n";
     $body .= 'Content-Type: text/plain; charset=UTF-8' . "\r\n\r\n";
-    $body .= $plain . "\r\n";
+    $body .= preg_replace('/^\./m', '..', $plain) . "\r\n";
     $body .= '--smartmade-mail-boundary' . "\r\n";
     $body .= 'Content-Type: text/html; charset=UTF-8' . "\r\n\r\n";
-    $body .= $html . "\r\n";
+    $body .= preg_replace('/^\./m', '..', $html) . "\r\n";
     $body .= '--smartmade-mail-boundary--' . "\r\n";
 
     $data = $headers . "\r\n" . $body . "\r\n.\r\n";

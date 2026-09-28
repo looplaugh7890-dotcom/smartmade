@@ -22,9 +22,9 @@ define('SITE_PATH', dirname(__DIR__));
 define('UPLOAD_PATH', SITE_PATH . '/uploads');
 define('UPLOAD_URL', SITE_URL . '/uploads');
 
-define('ADMIN_EMAIL', 'hello@smartmade.example');
+define('ADMIN_EMAIL', 'looplaugh7890@gmail.com');
 define('EMAIL_FROM_NAME', 'SmartMade Embroidery');
-define('EMAIL_FROM_ADDRESS', 'hello@smartmade.example');
+define('EMAIL_FROM_ADDRESS', 'looplaugh7890@gmail.com');
 
 define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024);
 define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);

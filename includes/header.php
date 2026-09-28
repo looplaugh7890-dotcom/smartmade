@@ -70,7 +70,7 @@ $cartCount = cart_count();
         <?= is_array($schema) ? jsonld($schema) : $schema ?>
     <?php endforeach; ?>
 </head>
-<body class="<?= e($bodyClass) ?>">
+<body class="<?= e($bodyClass) ?>" data-site-url="<?= SITE_URL ?>">
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
     <header class="site-header" id="site-header">
@@ -112,7 +112,8 @@ $cartCount = cart_count();
             <div class="header-actions">
                 <a href="<?= SITE_URL ?>/quote.php" class="btn btn-primary btn-sm header-cta">Get a Quote</a>
 
-                <a href="<?= SITE_URL ?>/cart.php" class="mini-cart" id="mini-cart" aria-label="Basket, <?= (int)$cartCount ?> items">
+                <a href="<?= SITE_URL ?>/cart.php" class="mini-cart" id="mini-cart" aria-label="Basket, <?= (int)$cartCount ?> items"
+                   aria-expanded="false" aria-controls="cart-drawer">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <span class="mini-cart-count<?= $cartCount === 0 ? ' is-empty' : '' ?>" id="mini-cart-count" aria-hidden="true"><?= (int)$cartCount ?></span>
                 </a>
@@ -127,5 +128,20 @@ $cartCount = cart_count();
     </header>
 
     <div class="nav-backdrop" id="nav-backdrop" aria-hidden="true"></div>
+
+    <?php
+    $drawerItems = [];
+    $drawerTotals = null;
+    if ($cartCount > 0) {
+        $drawerTotals = cart_totals();
+        $drawerItems = $drawerTotals['items'];
+    }
+    ?>
+    <div class="cart-drawer-backdrop" id="cart-drawer-backdrop" aria-hidden="true"></div>
+    <aside class="cart-drawer" id="cart-drawer" aria-label="Your basket" aria-hidden="true">
+        <div class="cart-drawer-content" id="cart-drawer-content">
+            <?php include __DIR__ . '/cart_drawer_partial.php'; ?>
+        </div>
+    </aside>
 
     <main id="main-content" class="site-main">

@@ -145,7 +145,7 @@ function customer_request_reset(string $email): array {
     global $pdo;
 
     $email = strtolower(trim($email));
-    $stmt = $pdo->prepare("SELECT id, name FROM customers WHERE email = ? AND status = 'active' LIMIT 1");
+    $stmt = $pdo->prepare("SELECT id, name, email FROM customers WHERE email = ? AND status = 'active' LIMIT 1");
     $stmt->execute([$email]);
     $customer = $stmt->fetch();
 

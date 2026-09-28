@@ -124,5 +124,6 @@ $currentYear = date('Y');
 
     <script src="<?= SITE_URL ?>/assets/js/main.js" defer></script>
     <script src="<?= SITE_URL ?>/assets/js/store.js" defer></script>
+    <script src="<?= SITE_URL ?>/assets/js/cart-drawer.js" defer></script>
 </body>
 </html>
