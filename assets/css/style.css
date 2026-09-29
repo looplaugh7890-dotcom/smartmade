@@ -557,15 +557,15 @@ body.nav-open {
     position: relative;
     width: 100%;
     max-width: 100%;
+    box-shadow: none;
 }
 
 .hero-image {
     display: block;
     width: 100%;
-    height: auto;
+    aspect-ratio: 6 / 5;
     object-fit: contain;
     background: transparent;
-    filter: drop-shadow(0 28px 40px rgba(10, 10, 10, 0.24));
 }
 
 
