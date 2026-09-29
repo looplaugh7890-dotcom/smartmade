@@ -567,9 +567,12 @@ body.nav-open {
 }
 
 .hero-image {
+    display: block;
     width: 100%;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 4 / 3;
     object-fit: cover;
+    object-position: center;
+    background: var(--color-black);
 }
 
 .hero-image-frame {
