@@ -80,8 +80,7 @@ include __DIR__ . '/includes/header.php';
         </div>
         <div class="hero-visual reveal" style="transition-delay: 0.3s;">
             <div class="hero-image-wrap">
-                <img src="<?= SITE_URL ?>/assets/images/heroimage.png" alt="Hand-stitched embroidered piece by SmartMade" class="hero-image" width="1536" height="1024" loading="eager" decoding="async">
-                <div class="hero-image-frame" aria-hidden="true"></div>
+                <img src="<?= SITE_URL ?>/assets/images/heroimage.png" alt="Hand-stitched embroidered piece by SmartMade" class="hero-image" width="960" height="815" loading="eager" decoding="async">
             </div>
             <div class="hero-float-card">
                 <strong>100% original</strong>

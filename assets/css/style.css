@@ -555,33 +555,19 @@ body.nav-open {
 
 .hero-image-wrap {
     position: relative;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-lg);
-    transform: rotate(2deg);
-    transition: transform var(--transition-slow);
-}
-
-.hero-image-wrap:hover {
-    transform: rotate(0deg);
+    width: 100%;
+    max-width: 100%;
 }
 
 .hero-image {
     display: block;
     width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    object-position: center;
-    background: var(--color-black);
+    height: auto;
+    object-fit: contain;
+    background: transparent;
+    filter: drop-shadow(0 28px 40px rgba(10, 10, 10, 0.24));
 }
 
-.hero-image-frame {
-    position: absolute;
-    inset: -12px;
-    border: 2px dashed var(--color-gold);
-    border-radius: calc(var(--radius-lg) + 8px);
-    pointer-events: none;
-}
 
 .hero-float-card {
     position: absolute;
@@ -1878,10 +1864,6 @@ body.modal-open {
         padding-bottom: 60px;
     }
 
-    .hero-image-frame {
-        inset: -6px;
-    }
-
     .hero-float-card {
         left: 12px;
         bottom: -12px;
@@ -3011,11 +2993,6 @@ body.drawer-open {
     box-shadow:
         0 24px 48px -26px rgba(10, 10, 10, 0.35),
         0 16px 42px -24px rgba(201, 162, 39, 0.55);
-}
-
-/* Hero photo: warm gold halo */
-.hero-image-wrap {
-    box-shadow: var(--shadow-lg), 0 34px 70px -40px rgba(201, 162, 39, 0.85);
 }
 
 /* CTA band: gold gradient with a light sweep */
